@@ -1,0 +1,4 @@
+@font-face {
+    font-family: 'at01';  /* Replace with your font name */
+    src: url('/assets/at01.ttf') format('truetype');  /* Update path and format */
+}
