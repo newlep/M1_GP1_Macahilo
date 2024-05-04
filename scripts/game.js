@@ -1,4 +1,3 @@
-// Game Configuration (Combined and Improved Readability)
 const config = {
   type: Phaser.AUTO,
   width: 1200,
@@ -6,6 +5,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
+      gravity: { y: 300 },
       debug: false
     }
   },
@@ -16,83 +16,221 @@ const config = {
   }
 };
 
-// Initialize the Game
-const game = new Phaser.Game(config);
+let game = new Phaser.Game(config);
+let Background, platforms, platform, iceBlock, player,
+cursors, jumpKey, fruits, fruit, coins, coin, stardrops, stardrop,
+jumpSound;
 
-// Game Variables
-let player, cash, plane, cursors, textScore;
-let score = 0; // Initialize score outside function
-let hasCash = false; // Flag to track cash collection
-let lastCashAlertTime = 0; // Timestamp for last cash alert
+let fruitCount = 4;
+let fruitsCollectedcount = 0;
+let fruitsCollectedText = 0;
 
-// Load Game Assets
+
+const centerX = game.config.width / 2;
+
+// Preload all game assets
 function preload() {
-  this.load
-    .image("player", "./assets/characters/pingu.png")
-    .image("cash", "./assets/objects/money.png") 
-    .image("background", "./assets/backgrounds/mainbg.jpg")
-    .image("plane", "./assets/objects/plane.png") 
-    .audio("cashSound", "./assets/audio/cash.mp3") 
-    .audio("victory", "./assets/audio/victory.mp3");
+  // Background
+  this.load.image('mountain', './assets/backgrounds/mainbg.jpg', { frameWidth: 1920, frameHeight: 1080 });
+  // Platforms
+  this.load.image('snow', './assets/tiles/snowplatform.png');
+  this.load.image('ice', './assets/tiles/iceplatform.png');
+  this.load.image('iceblock', './assets/tiles/ice.png');
+  this.load.image('block', './assets/tiles/platform block.png');
+  // Objects
+  this.load.image('bomb', './assets/objects/mball.png');
+  this.load.image('stardrop', './assets/objects/gold.png');
+  this.load.image('fruit', './assets/objects/stone.png');
+  //Player Sprites
+  this.load.spritesheet('playeridle', './assets/characters/pinge/Idle.png', 
+    {frameWidth: 16, frameHeight: 16});
+    this.load.spritesheet('playerrun', './assets/characters/pinge/Run.png', 
+    {frameWidth: 16, frameHeight: 16});
+    this.load.spritesheet('playerjump', './assets/characters/pinge/Jump.png', 
+    {frameWidth: 16, frameHeight: 16});
+    this.load.spritesheet('playerhurt', './assets/characters/pinge/Damage.png', 
+    {frameWidth: 16, frameHeight: 16});
+    this.load.spritesheet('playerdeath', './assets/characters/pinge/Dead.png', 
+    {frameWidth: 16, frameHeight: 16});
+
+  
+  // Audio
+  this.load.audio('backgroundMusic', './assets/audio/bgmusic.mp3');
+  //this.load.audio('jumpSound', 'Assets/Audio/jumpSound.mp3');
+  //this.load.audio('runSound', 'Assets/Audio/runSound.mp3');
+  //this.load.audio('deathSound', 'Assets/Audio/deathSound.mp3');
+  //this.load.audio('stardropSound', 'Assets/Audio/stardropSound.mp3');
+  //this.load.audio('fruitCollectSound', 'Assets/Audio/fruitCollectSound.mp3');
+  //this.load.audio('bombBounceSound', 'Assets/Audio/bombBounceSound.mp3');
 }
 
-// Create Game Objects and Settings
 function create() {
-  // Add Background Image
-  this.add.image(0, 0, "background").setOrigin(0, 0);
+  // Background
+  const background = this.add.sprite(centerX, 300, 'mountain');
+  background.displayWidth = game.config.width;
+  background.displayHeight = game.config.height;
 
-  // Create Sprites with Physics 
-  player = this.physics.add.sprite(0, 340, "player").setBounce(0).setCollideWorldBounds(true).setScale(0.2);
-  cash = this.physics.add.sprite(500, 450, "cash").setScale(0.2);
-  plane = this.physics.add.sprite(1000, 150, "plane").setScale(1);
+  // Player animations
+  const playerAnims = this.anims;
+  playerAnims.create({ key: 'idle', frames: [{ key: 'playeridle', frame: 1 }] });
 
-  // Create Score Text
-  const style = { font: "50px Courier New", fill: "#FFFB03" };
-  textScore = this.add.text(50, 30, "Money Stolen: " + score, style);
-
-  // Get Cursor Keys
+  playerAnims.create({
+    key: 'run',
+    frames: this.anims.generateFrameNumbers('playerrun', { start: 1, end: 14 }),
+    frameRate: 60,
+    repeat: 0
+  });
+  playerAnims.create({
+    key: 'jump',
+    frames: this.anims.generateFrameNumbers('playerjump', { start: 0, end: 11 }),
+    frameRate: 10,
+    repeat: 0
+  });
+  playerAnims.create({
+    key: 'hurt',
+    frames: this.anims.generateFrameNumbers('playerhurt', { start: 0, end: 3 }),
+    frameRate: 20,
+    repeat: 0
+  });
+  playerAnims.create({
+    key: 'death',
+    frames: this.anims.generateFrameNumbers('playerdeath', { start: 0, end: 6 }),
+    frameRate: 20,
+    repeat: 0
+  });
+  //test if hindi to mag work mag cry ako
   cursors = this.input.keyboard.createCursorKeys();
+  
+  // Jump key (space bar) for jumping
+    jumpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
-  // Create Sound Objects
-  cashSound = this.sound.add("cashSound");
-  victorySound = this.sound.add("victory");
+  // Background music
+  const backgroundMusic = this.sound.add('backgroundMusic', { loop: true });
+  backgroundMusic.play();
+
+  // Sounds
+  //this.runSound = this.sound.add('runSound');
+  //this.jumpSound = this.sound.add('jumpSound');
+  //this.deathSound = this.sound.add('deathSound');
+  // Platforms
+  const platforms = this.physics.add.staticGroup();
+  platforms.create(90, 600, 'snow').setScale().refreshBody();
+  platforms.create(410, 580, 'snow').setScale().refreshBody();
+  platforms.create(810, 580, 'snow').setScale().refreshBody();
+  platforms.create(1130, 600, 'snow').setScale().refreshBody();
+  platforms.create(100, 450, 'snow').setScale(.75).refreshBody();
+  platforms.create(300, 420, 'block').setScale(.50).refreshBody();
+  platforms.create(400, 360, 'block').setScale(.50).refreshBody();
+  platforms.create(900, 300, 'block').setScale(.50).refreshBody();
+  platforms.create(1100, 130, 'block').setScale(.50).refreshBody();
+  platforms.create(950, 130, 'block').setScale(.50).refreshBody();
+  platforms.create(800, 130, 'block').setScale(.50).refreshBody();
+  platforms.create(650, 130, 'block').setScale(.50).refreshBody();
+  platforms.create(100, 130, 'block').setScale(.50).refreshBody();
+
+  // Player
+  player = this.physics.add.sprite(50, 490, 'playerrun');
+    player.setBounce(0.2);
+    player.setCollideWorldBounds(true);
+    player.setScale(3);
+
+  // Fruits
+  const fruits = this.physics.add.group({
+    key: 'fruit',
+    repeat: fruitCount,
+    setXY: { x: 0, y: 0, stepX: 135 }
+  });
+  fruits.children.iterate(function (child) {
+    child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
+    child.setScale(0.09); // Set the scale to 0.5 (adjust as needed)
+    child.y = Phaser.Math.Between(0, 600);
+    child.x = Phaser.Math.Between(100, config.width - 10);
+  });
+
+  // Bomb
+  const bomb = this.physics.add.image(config.width / 2, 0, 'bomb');
+  bomb.setScale(.07);
+  bomb.setBounce(1, 1);
+  bomb.setVelocity(200, 200);
+  bomb.setCollideWorldBounds(true);
+
+  // Text
+  const fruitCollectedText = this.add.text(config.width / 1.5, 20, 'Fruits Collected: ', { fontSize: '40px', fill: '#FFD700', fontStyle: 'bold', fontFamily: 'tahoma' }); // fruits collected text
+  fruitCollectedText.setShadow(2, 2, '#f890e7', 3, true, true);
+
+
+this.physics.add.collider(player, platforms);
+this.physics.add.collider(fruits, platforms);
+this.physics.add.collider(player, bomb, function () {
+  hitBomb();
+}, null);
+this.physics.add.overlap(player, fruits, collectFruit, null);
+
 }
- 
+
+function collectFruit(player, fruit) {
+  fruit.destroy();
+  fruitCollected += 1;
+  fruitCollectedText.setText('Fruits Collected: ' + fruitCollected);
+  fruitCollectSound.play();
+}
+
+function hitBomb() {
+  player.setTint(0xff0000);
+  player.anims.play('hurt', true);
+  player.setVelocityY(-200);
+  deathSound.play();
+  this.time.addEvent({ delay: 1000, callback: resetGame, callbackScope: this });
+}
+
+function resetGame() {
+  player.setTint(0xffffff);
+  player.anims.play('idle', true);
+  player.setPosition(50, 490);
+  bomb.setPosition(config.width / 2, 0);
+  fruits.children.iterate(function (child) {
+    child.enableBody(true);
+  });
+}
+
 function update() {
+if (cursors.left.isDown) {
+        let velocityX = -160;
+        if (player.body.touching.down && (player.body.blocked.down || player.body.touching.down)) {
+           velocityX = -80; // Reduced velocity on ice
+            
+        }
+        player.setVelocityX(velocityX);
+        player.anims.play('run', true);
+        player.flipX = true;
+    } else if (cursors.right.isDown) {
+        let velocityX = 160;
+        if (player.body.touching.down && (player.body.blocked.down || player.body.touching.down)) {
 
-  player.setVelocityX(0); 
-  if (cursors.left.isDown) {
-    player.setVelocityX(-160);
-    player.flipX = true; 
-  } else if (cursors.right.isDown) {
-    player.setVelocityX(160);
-    player.flipX = false; 
-  }
-  // Player Movement
-  player.setVelocityX(cursors.left.isDown ? -160 : cursors.right.isDown ? 160 : 0);
-  player.setVelocityY(cursors.up.isDown ? -160 : cursors.down.isDown ? 160 : 0);
-
-  // Overlap Checks
-  this.physics.add.overlap(player, cash, () => {
-    hasCash = true; // Set flag upon cash collection
-    cash.disableBody(true, true);
-    cashSound.play();
-    alert("Money secured! Time to bring it to the plane!");
-  });
-  this.physics.add.overlap(player, plane, () => {
-    if (hasCash) { // Check if cash is collected before triggering victory
-      score += 900;
-      textScore.setText("Money Stolen: " + score);
-      player.disableBody(true, true);
-      victorySound.play();
-      alert("GOOD JOB!\nYou have committed a crime! (You are a criminal penguin now)");
-      hasCash = false; // Reset flag after victory
+                velocityX = 80; // Reduced velocity on ice
+            
+        }
+        player.setVelocityX(velocityX);
+        player.anims.play('run', true);
+        player.flipX = false;
     } else {
-      const now = Math.floor(Date.now() / 1000); // Get current time in seconds
-      if (now - lastCashAlertTime >= 5) { // Check if 5 seconds have passed
-        alert("YOU NEED THE CASH FIRST!\nGo get it and bring it back to the plane.");
-        lastCashAlertTime = now; // Update last alert time
-      }
+        player.setVelocityX(0);
+        player.anims.play('idle');
     }
-  });
+
+  if (cursors.space.isDown && player.body.touching.down) {
+    player.setVelocityY(-350);
+    jumpSound.play();
+  }
+      // Jump Logic
+      if (cursors.space.isDown && player.body.touching.down) {
+        player.setVelocityY(-280);
+        player.anims.play('jump', true);
+        this.jumpSound.play(); // Use this.jumpSound to refer to the jump sound
+    } else if (!player.body.touching.down) {
+        player.anims.play('jump', true);
+    }    
+
+
 }
+
