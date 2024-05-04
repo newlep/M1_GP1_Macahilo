@@ -9,228 +9,279 @@ const config = {
       debug: false
     }
   },
-  scene: {
-    preload,
-    create,
-    update
-  }
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
 };
-
 let game = new Phaser.Game(config);
-let Background, platforms, platform, iceBlock, player,
-cursors, jumpKey, fruits, fruit, coins, coin, stardrops, stardrop,
+
+// Variables
+let Background, platforms, platform, grass, lava, player,
+cursors, jumpKey, coins, coin, pstones, pstone,
 jumpSound;
+let backgroundMusic;
+let coinCount= 4;
+let coinsCollectedcount = 0;
+let coinsCollectedText = 0;
 
-let fruitCount = 4;
-let fruitsCollectedcount = 0;
-let fruitsCollectedText = 0;
 
-
-const centerX = game.config.width / 2;
-
-// Preload all game assets
-function preload() {
-  // Background
-  this.load.image('mountain', './assets/backgrounds/mainbg.jpg', { frameWidth: 1920, frameHeight: 1080 });
-  // Platforms
-  this.load.image('snow', './assets/tiles/snowplatform.png');
-  this.load.image('ice', './assets/tiles/iceplatform.png');
-  this.load.image('iceblock', './assets/tiles/ice.png');
-  this.load.image('block', './assets/tiles/platform block.png');
-  // Objects
-  this.load.image('bomb', './assets/objects/mball.png');
-  this.load.image('stardrop', './assets/objects/gold.png');
-  this.load.image('fruit', './assets/objects/stone.png');
-  //Player Sprites
-  this.load.spritesheet('playeridle', './assets/characters/pinge/Idle.png', 
-    {frameWidth: 16, frameHeight: 16});
-    this.load.spritesheet('playerrun', './assets/characters/pinge/Run.png', 
-    {frameWidth: 16, frameHeight: 16});
-    this.load.spritesheet('playerjump', './assets/characters/pinge/Jump.png', 
-    {frameWidth: 16, frameHeight: 16});
-    this.load.spritesheet('playerhurt', './assets/characters/pinge/Damage.png', 
-    {frameWidth: 16, frameHeight: 16});
-    this.load.spritesheet('playerdeath', './assets/characters/pinge/Dead.png', 
-    {frameWidth: 16, frameHeight: 16});
-
+function preload ()
+{
+  //background
+  this.load
+    .image('background','./assets/backgrounds/mainbg.jpg', { frameWidth: 1920, frameHeight: 1080 })
+  //obj
+    .image('bomb', './assets/objects/mball.png')
+    .image('coin', './assets/objects/gold.png')
+    .image('powerstone', './assets/objects/stone.png')
   
-  // Audio
-  this.load.audio('backgroundMusic', './assets/audio/bgmusic.mp3');
-  //this.load.audio('jumpSound', 'Assets/Audio/jumpSound.mp3');
-  //this.load.audio('runSound', 'Assets/Audio/runSound.mp3');
-  //this.load.audio('deathSound', 'Assets/Audio/deathSound.mp3');
-  //this.load.audio('stardropSound', 'Assets/Audio/stardropSound.mp3');
-  //this.load.audio('fruitCollectSound', 'Assets/Audio/fruitCollectSound.mp3');
-  //this.load.audio('bombBounceSound', 'Assets/Audio/bombBounceSound.mp3');
+  //platforms
+    //.image('grass', '')
+    //.image('lava','')
+
+  //playerSprite
+  .spritesheet('playeridle', './assets/characters/pinge/Idle.png', 
+  {frameWidth: 16, frameHeight: 16})
+  this.load.spritesheet('playerrun', './assets/characters/pinge/Run.png', 
+  {frameWidth: 16, frameHeight: 16})
+  this.load.spritesheet('playerjump', './assets/characters/pinge/Jump.png', 
+  {frameWidth: 16, frameHeight: 16})
+  this.load.spritesheet('playerhurt', './assets/characters/pinge/Damage.png', 
+  {frameWidth: 16, frameHeight: 16})
+  this.load.spritesheet('playerdeath', './assets/characters/pinge/Dead.png', 
+  {frameWidth: 16, frameHeight: 16})
+
+  //Audio
+  .audio('backgroundMusic', './assets/audio/bgmusic.mp3');
 }
 
-function create() {
-  // Background
-  const background = this.add.sprite(centerX, 300, 'mountain');
+function create ()
+{
+
+  //============start create background=========
+
+  const background = this.add.sprite(600, 300, 'background');
   background.displayWidth = game.config.width;
   background.displayHeight = game.config.height;
 
-  // Player animations
-  const playerAnims = this.anims;
-  playerAnims.create({ key: 'idle', frames: [{ key: 'playeridle', frame: 1 }] });
+  //==================start create platform===============
+  platforms = this.physics.add.staticGroup();
+  //set to bottom screen 600
+  platforms.create(60, 600, 'grass').setScale().refreshBody();
+  platforms.create(0, 500, 'grass').setScale().refreshBody();
+  platforms.create(180, 600, 'lava').setScale().refreshBody();
+  //^ COPY and CHANGE VALUES for easy access ^
 
-  playerAnims.create({
+
+
+  //========start create PLAYER CHARACTER=========
+  //spawn coords
+  player = this.physics.add.sprite(60, 500, 'playerrun');
+  player.setBounce(0.2);
+  player.setCollideWorldBounds(true);
+  //anims
+  this.anims.create({ key: 'idle', frames: [{ key: 'playeridle', frame: 1 }] });
+
+  this.anims.create({
     key: 'run',
     frames: this.anims.generateFrameNumbers('playerrun', { start: 1, end: 14 }),
     frameRate: 60,
     repeat: 0
   });
-  playerAnims.create({
+  this.anims.create({
     key: 'jump',
     frames: this.anims.generateFrameNumbers('playerjump', { start: 0, end: 11 }),
     frameRate: 10,
     repeat: 0
   });
-  playerAnims.create({
+  this.anims.create({
     key: 'hurt',
     frames: this.anims.generateFrameNumbers('playerhurt', { start: 0, end: 3 }),
     frameRate: 20,
     repeat: 0
   });
-  playerAnims.create({
+  this.anims.create({
     key: 'death',
     frames: this.anims.generateFrameNumbers('playerdeath', { start: 0, end: 6 }),
     frameRate: 20,
     repeat: 0
   });
-  //test if hindi to mag work mag cry ako
-  cursors = this.input.keyboard.createCursorKeys();
+
+
+  //=====================start create audio===============
+
   
-  // Jump key (space bar) for jumping
-    jumpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+ 
+  //=============start create controls=================
+  cursors = this.input.keyboard.createCursorKeys();
+  jumpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
-  // Background music
-  const backgroundMusic = this.sound.add('backgroundMusic', { loop: true });
-  backgroundMusic.play();
+  //==============start create objects=================
+  pstone = this.physics.add.staticSprite(100, 700, 'powerstone' );
+  pstone.setScale(0.5);
 
-  // Sounds
-  //this.runSound = this.sound.add('runSound');
-  //this.jumpSound = this.sound.add('jumpSound');
-  //this.deathSound = this.sound.add('deathSound');
-  // Platforms
-  const platforms = this.physics.add.staticGroup();
-  platforms.create(90, 600, 'snow').setScale().refreshBody();
-  platforms.create(410, 580, 'snow').setScale().refreshBody();
-  platforms.create(810, 580, 'snow').setScale().refreshBody();
-  platforms.create(1130, 600, 'snow').setScale().refreshBody();
-  platforms.create(100, 450, 'snow').setScale(.75).refreshBody();
-  platforms.create(300, 420, 'block').setScale(.50).refreshBody();
-  platforms.create(400, 360, 'block').setScale(.50).refreshBody();
-  platforms.create(900, 300, 'block').setScale(.50).refreshBody();
-  platforms.create(1100, 130, 'block').setScale(.50).refreshBody();
-  platforms.create(950, 130, 'block').setScale(.50).refreshBody();
-  platforms.create(800, 130, 'block').setScale(.50).refreshBody();
-  platforms.create(650, 130, 'block').setScale(.50).refreshBody();
-  platforms.create(100, 130, 'block').setScale(.50).refreshBody();
-
-  // Player
-  player = this.physics.add.sprite(50, 490, 'playerrun');
-    player.setBounce(0.2);
-    player.setCollideWorldBounds(true);
-    player.setScale(3);
-
-  // Fruits
-  const fruits = this.physics.add.group({
-    key: 'fruit',
-    repeat: fruitCount,
-    setXY: { x: 0, y: 0, stepX: 135 }
+  //============obj coin================
+  coin = this.physics.add.group({
+    key:'coin',
+    repeat: coinCount,
+    setXY: { x: 0, y: 0, stepX: 120}
   });
-  fruits.children.iterate(function (child) {
+  coin.children.iterate(function (child) {
     child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
     child.setScale(0.09); // Set the scale to 0.5 (adjust as needed)
     child.y = Phaser.Math.Between(0, 600);
     child.x = Phaser.Math.Between(100, config.width - 10);
   });
 
-  // Bomb
-  const bomb = this.physics.add.image(config.width / 2, 0, 'bomb');
-  bomb.setScale(.07);
-  bomb.setBounce(1, 1);
-  bomb.setVelocity(200, 200);
-  bomb.setCollideWorldBounds(true);
-
-  // Text
-  const fruitCollectedText = this.add.text(config.width / 1.5, 20, 'Fruits Collected: ', { fontSize: '40px', fill: '#FFD700', fontStyle: 'bold', fontFamily: 'tahoma' }); // fruits collected text
-  fruitCollectedText.setShadow(2, 2, '#f890e7', 3, true, true);
-
-
-this.physics.add.collider(player, platforms);
-this.physics.add.collider(fruits, platforms);
-this.physics.add.collider(player, bomb, function () {
-  hitBomb();
-}, null);
-this.physics.add.overlap(player, fruits, collectFruit, null);
+     bomb = this.physics.add.image(config.width / 2, 0, 'bomb');
+    bomb.setScale(.07);
+    bomb.setBounce(1,1);
+    bomb.setVelocity(200,200);
+    bomb.setCollideWorldBounds(true);
+    
+    coinsCollected = this.add.text(config.width / 1.5, 20, 'Coins Collected: ', 
+    { fontSize: '40px', fill: '#FFD700' , fontStyle: 'bold' , fontFamily: 'tahoma'}); // coins collected text
+    coinsCollected.setShadow(2, 2, '#f890e7', 3, true, true);
 
 }
 
-function collectFruit(player, fruit) {
-  fruit.destroy();
-  fruitCollected += 1;
-  fruitCollectedText.setText('Fruits Collected: ' + fruitCollected);
-  fruitCollectSound.play();
-}
+function update ()
+{
+  //collisions
+  
+  this.physics.add.collider(player, platforms);
+  this.physics.add.collider(coin, platforms);
+  this.physics.add.collider(bomb, platforms,);
+  this.physics.add.overlap(player, coin, coinCollect, null, this);
+  this.physics.add.overlap(player, bomb, bombHit, null, this);
+  this.physics.add.overlap(player, pstone, checkWin, null, this);
 
-function hitBomb() {
-  player.setTint(0xff0000);
-  player.anims.play('hurt', true);
-  player.setVelocityY(-200);
-  deathSound.play();
-  this.time.addEvent({ delay: 1000, callback: resetGame, callbackScope: this });
-}
-
-function resetGame() {
-  player.setTint(0xffffff);
-  player.anims.play('idle', true);
-  player.setPosition(50, 490);
-  bomb.setPosition(config.width / 2, 0);
-  fruits.children.iterate(function (child) {
-    child.enableBody(true);
-  });
-}
-
-function update() {
-if (cursors.left.isDown) {
-        let velocityX = -160;
-        if (player.body.touching.down && (player.body.blocked.down || player.body.touching.down)) {
-           velocityX = -80; // Reduced velocity on ice
-            
-        }
-        player.setVelocityX(velocityX);
+  //player controls finally
+  if (cursors.left.isDown){
+    let velocityX = -200;
+    player.setVelocityX(velocityX);
         player.anims.play('run', true);
         player.flipX = true;
-    } else if (cursors.right.isDown) {
-        let velocityX = 160;
-        if (player.body.touching.down && (player.body.blocked.down || player.body.touching.down)) {
-
-                velocityX = 80; // Reduced velocity on ice
-            
-        }
-        player.setVelocityX(velocityX);
+  }else if (cursors.right.isDown) {
+    let velocityX = 200;
+    player.setVelocityX(velocityX);
         player.anims.play('run', true);
         player.flipX = false;
-    } else {
-        player.setVelocityX(0);
+  } else {
+    player.setVelocityX(0);
         player.anims.play('idle');
-    }
-
-  if (cursors.space.isDown && player.body.touching.down) {
-    player.setVelocityY(-350);
-    jumpSound.play();
   }
-      // Jump Logic
-      if (cursors.space.isDown && player.body.touching.down) {
-        player.setVelocityY(-280);
-        player.anims.play('jump', true);
-        this.jumpSound.play(); // Use this.jumpSound to refer to the jump sound
-    } else if (!player.body.touching.down) {
-        player.anims.play('jump', true);
-    }    
 
-
+  //jumping
+  if (cursors.space.isDown && player.body.touching.down){
+    player
+    .setVelocityY(-400)
+    .anims.play('jump', true);
+  } else if (!player.body.touching.down){
+    player.anims.play('jump', true);
+  }
 }
 
+  // coin collect
+  function coinCollect(player, coin)
+  {
+    coin.disableBody(true, true); // remove coin
+    //sound here later ^
+    coinsCollectedcount += 1;
+    coinsCollectedText += 1;
+    coinsCollected.setText('Coins Collected: '+ coinsCollectedText);
+
+    if (coin.countActive(true) < coinCount)
+      {
+        coin.enableBody(true, Phaser.Math.Between(0,config.width-10), 0, true, true);
+      }
+      if (coinsCollectedcount == 1) { player.setTint(0xff4040) }
+      if (coinsCollectedcount == 2) { player.setTint(0xffac40) }
+      if (coinsCollectedcount == 3) { player.setTint(0xfff240) }
+      if (coinsCollectedcount == 4) { player.setTint(0x67ff3d) }
+      if (coinsCollectedcount == 5) { player.setTint(0x4056ff) }
+      if (coinsCollectedcount == 6) { player.setTint(0x4b0082) }
+      if (coinsCollectedcount == 7) { player.setTint(0x8000de); coinsCollectedcount = 0}
+  
+      if (coinsCollectedcount % 5 == 0) { player.setScale(player.scaleX * 1.1, player.scaleY * 1.1) }
+
+  }
+
+  // win or lose conditions
+
+  function gameOver(player) {
+    //play anim death
+    player.anims.play('death', true);
+    player.disableBody(true, true);
+
+    //game over text
+    let gameOverText = this.add.text(500, 200, 'Game Over\nScore: ' + coinsCollectedText, 
+        { fontSize: '50px', fill: '#FFD700', fontStyle: 'bold', fontFamily: 'tahoma', align: 'center' });
+    gameOverText.setOrigin(0);
+    gameOverText.setShadow(2, 2, '#f890e7', 3, true, true);
+
+    // Prompt to start a new game
+    let restartText = this.add.text(650, 350, 'Press Enter to Start a New Game', 
+        { fontSize: '35px', fill: '#89cff0', fontStyle: 'bold', fontFamily: 'tahoma', align: 'center' });
+    restartText.setOrigin(0.5);
+    restartText.setShadow(3, 3, '#f890e7', 3, true, true);
+
+    // Event listener for Enter key
+    let scene = this;
+    this.input.keyboard.on('keydown-ENTER', function () {
+        // Restart the game
+        scene.scene.restart();
+    });
+
+    // Stop background music when the game is over
+    if (backgroundMusic && backgroundMusic.isPlaying) {
+        backgroundMusic.stop();
+    }
+  }
+
+  function bombHit(player, bomb){
+    this.physics.pause();
+    gameOver.call(this, player);
+  }
+
+  function Death(player, lava){
+    this.physics.pause();
+    gameOver.call(this, player);
+  }
+  function Victory(player, pstone) {
+    checkWin.call(this, player);
+}
+
+// check pstone overlap 
+function checkWin(player, pstone){
+  this.physics.pause();
+
+  //display win msg
+      // Display congratulatory message
+      let winText = this.add.text(650, 230, 'You found a Stardrop!\nYour mind is filled with thoughts of...\n[Your Favorite Thing]\nMade by: lars / koh', 
+      { fontSize: '35px', fill: '#FFD700', fontStyle: 'bold' , fontFamily: 'tahoma' , align: 'center' });
+  winText.setOrigin(0.5);
+  winText.setShadow(2, 2, '#f890e7', 3, true, true);
+
+  // Prompt to start a new game
+  let restartText = this.add.text(650, 350, 'Press Enter to Start a New Game', 
+  { fontSize: '35px', fill: '#89cff0', fontStyle: 'bold', fontFamiily: 'tahoma', align: 'center' });
+  restartText.setOrigin(0.5);
+  restartText.setShadow(3, 3, '#f890e7', 3, true, true);
+
+  // Event listener for Enter key
+  this.input.keyboard.on('keydown-ENTER', function () {
+      // Restart the game
+      this.scene.restart();
+  }, this);
+
+  // Player disappears!
+  pstone.disableBody(true, true);
+
+  // Stop background music when the game is won
+  if (backgroundMusic && backgroundMusic.isPlaying) {
+      backgroundMusic.stop();
+  }
+}

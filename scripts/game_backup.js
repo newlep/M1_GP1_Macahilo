@@ -226,7 +226,7 @@ if (cursors.left.isDown) {
       if (cursors.space.isDown && player.body.touching.down) {
         player.setVelocityY(-280);
         player.anims.play('jump', true);
-        this.jumpSound.play(); // Use this.jumpSound to refer to the jump sound
+       // this.jumpSound.play(); // Use this.jumpSound to refer to the jump sound
     } else if (!player.body.touching.down) {
         player.anims.play('jump', true);
     }    
