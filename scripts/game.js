@@ -69,9 +69,13 @@ function create ()
   //==================start create platform===============
   platforms = this.physics.add.staticGroup();
   //set to bottom screen 600
-  platforms.create(60, 600, 'grass').setScale().refreshBody();
-  platforms.create(0, 500, 'grass').setScale().refreshBody();
-  platforms.create(180, 600, 'lava').setScale().refreshBody();
+  platforms.create(60, 600, 'grass').setScale(2).refreshBody();
+  platforms.create(120, 600, 'grass').setScale(2).refreshBody();
+  platforms.create(180, 600, 'grass').setScale(2).refreshBody();
+  platforms.create(240, 600, 'grass').setScale(2).refreshBody();
+  platforms.create(300, 600, 'grass').setScale(2).refreshBody();
+  platforms.create(460, 600, 'lava').setScale(2).refreshBody();
+  //platforms.create(180, 600, 'lava').setScale().refreshBody();
   //^ COPY and CHANGE VALUES for easy access ^
 
 
@@ -80,6 +84,7 @@ function create ()
   //spawn coords
   player = this.physics.add.sprite(60, 500, 'playerrun');
   player.setBounce(0.2);
+  player.setScale(2);
   player.setCollideWorldBounds(true);
   //anims
   this.anims.create({ key: 'idle', frames: [{ key: 'playeridle', frame: 1 }] });
@@ -87,12 +92,12 @@ function create ()
   this.anims.create({
     key: 'run',
     frames: this.anims.generateFrameNumbers('playerrun', { start: 1, end: 14 }),
-    frameRate: 60,
+    frameRate: 12,
     repeat: 0
   });
   this.anims.create({
     key: 'jump',
-    frames: this.anims.generateFrameNumbers('playerjump', { start: 0, end: 11 }),
+    frames: this.anims.generateFrameNumbers('playerjump', { start: 1, end: 12 }),
     frameRate: 10,
     repeat: 0
   });
@@ -119,8 +124,9 @@ function create ()
   jumpKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
   //==============start create objects=================
-  pstone = this.physics.add.staticSprite(100, 700, 'powerstone' );
-  pstone.setScale(0.5);
+  pstone = this.physics.add.staticSprite(0, 0, 'powerstone' );
+  pstone.setScale(0.05);
+  pstone.body.setCircle(20);
 
   //============obj coin================
   coin = this.physics.add.group({
@@ -130,7 +136,7 @@ function create ()
   });
   coin.children.iterate(function (child) {
     child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
-    child.setScale(0.09); // Set the scale to 0.5 (adjust as needed)
+    child.setScale(0.030); // Set the scale to 0.5 (adjust as needed)
     child.y = Phaser.Math.Between(0, 600);
     child.x = Phaser.Math.Between(100, config.width - 10);
   });
@@ -176,9 +182,8 @@ function update ()
 
   //jumping
   if (cursors.space.isDown && player.body.touching.down){
-    player
-    .setVelocityY(-400)
-    .anims.play('jump', true);
+    player.setVelocityY(-280);
+    player.anims.play('jump', true);
   } else if (!player.body.touching.down){
     player.anims.play('jump', true);
   }
@@ -187,25 +192,28 @@ function update ()
   // coin collect
   function coinCollect(player, coin)
   {
+    
     coin.disableBody(true, true); // remove coin
     //sound here later ^
     coinsCollectedcount += 1;
     coinsCollectedText += 1;
     coinsCollected.setText('Coins Collected: '+ coinsCollectedText);
 
-    if (coin.countActive(true) < coinCount)
-      {
-        coin.enableBody(true, Phaser.Math.Between(0,config.width-10), 0, true, true);
-      }
-      if (coinsCollectedcount == 1) { player.setTint(0xff4040) }
-      if (coinsCollectedcount == 2) { player.setTint(0xffac40) }
-      if (coinsCollectedcount == 3) { player.setTint(0xfff240) }
-      if (coinsCollectedcount == 4) { player.setTint(0x67ff3d) }
-      if (coinsCollectedcount == 5) { player.setTint(0x4056ff) }
-      if (coinsCollectedcount == 6) { player.setTint(0x4b0082) }
-      if (coinsCollectedcount == 7) { player.setTint(0x8000de); coinsCollectedcount = 0}
+
+    //COLORS NOT WORKING
+    //if (coins.countActive(true) < coinCount)
+      //{
+       // coin.enableBody(true, Phaser.Math.Between(0,config.width-10), 0, true, true);
+      //}
+     // if (coinsCollectedcount == 1) { player.setTint(0xff4040) }
+      //if (coinsCollectedcount == 2) { player.setTint(0xffac40) }
+      //if (coinsCollectedcount == 3) { player.setTint(0xfff240) }
+      //if (coinsCollectedcount == 4) { player.setTint(0x67ff3d) }
+     // if (coinsCollectedcount == 5) { player.setTint(0x4056ff) }
+     // if (coinsCollectedcount == 6) { player.setTint(0x4b0082) }
+     // if (coinsCollectedcount == 7) { player.setTint(0x8000de); coinsCollectedcount = 0}
   
-      if (coinsCollectedcount % 5 == 0) { player.setScale(player.scaleX * 1.1, player.scaleY * 1.1) }
+      //if (coinsCollectedcount % 5 == 0) { player.setScale(player.scaleX * 1.1, player.scaleY * 1.1) }
 
   }
 
@@ -260,7 +268,7 @@ function checkWin(player, pstone){
 
   //display win msg
       // Display congratulatory message
-      let winText = this.add.text(650, 230, 'You found a Stardrop!\nYour mind is filled with thoughts of...\n[Your Favorite Thing]\nMade by: lars / koh', 
+      let winText = this.add.text(650, 230, 'EVOLUTION TIIIIIIIME!!', 
       { fontSize: '35px', fill: '#FFD700', fontStyle: 'bold' , fontFamily: 'tahoma' , align: 'center' });
   winText.setOrigin(0.5);
   winText.setShadow(2, 2, '#f890e7', 3, true, true);
