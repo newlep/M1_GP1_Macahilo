@@ -214,8 +214,8 @@ function create ()
     bomb.setVelocity(200,200);
     bomb.setCollideWorldBounds(true);
     
-    coinsCollected = this.add.text(config.width / 1.5, 20, 'Coins Collected: ', 
-    { fontSize: '40px', fill: '#23FF00' , fontStyle: 'bold' , fontFamily: 'Courier New'}); // coins collected text
+    coinsCollected = this.add.text(50 / 1.5, 10, 'Coins Collected: ', 
+    { fontSize: '20px', fill: '#FFFFFF' , fontStyle: 'bold' , fontFamily: 'Courier New'}); // coins collected text
 
 }
 
@@ -282,19 +282,18 @@ function update ()
 
 
     //COLORS NOT WORKING
-    //if (coins.countActive(true) < coinCount)
-      //{
-       // coin.enableBody(true, Phaser.Math.Between(0,config.width-10), 0, true, true);
-      //}
-     // if (coinsCollectedcount == 1) { player.setTint(0xff4040) }
-      //if (coinsCollectedcount == 2) { player.setTint(0xffac40) }
-      //if (coinsCollectedcount == 3) { player.setTint(0xfff240) }
-      //if (coinsCollectedcount == 4) { player.setTint(0x67ff3d) }
-     // if (coinsCollectedcount == 5) { player.setTint(0x4056ff) }
-     // if (coinsCollectedcount == 6) { player.setTint(0x4b0082) }
-     // if (coinsCollectedcount == 7) { player.setTint(0x8000de); coinsCollectedcount = 0}
+
+       coin.enableBody(true, Phaser.Math.Between(0,config.width-10), 0, true, true);
+      
+     if (coinsCollectedcount == 1) { player.setTint(0xff4040) }
+      if (coinsCollectedcount == 2) { player.setTint(0xffac40) }
+      if (coinsCollectedcount == 3) { player.setTint(0xfff240) }
+      if (coinsCollectedcount == 4) { player.setTint(0x67ff3d) }
+     if (coinsCollectedcount == 5) { player.setTint(0x4056ff) }
+     if (coinsCollectedcount == 6) { player.setTint(0x4b0082) }
+     if (coinsCollectedcount == 7) { player.setTint(0x8000de); coinsCollectedcount = 0}
   
-      //if (coinsCollectedcount % 5 == 0) { player.setScale(player.scaleX * 1.1, player.scaleY * 1.1) }
+      if (coinsCollectedcount % 5 == 0) { player.setScale(player.scaleX * 1.1, player.scaleY * 1.1) }
 
   }
 
@@ -306,8 +305,8 @@ function update ()
     player.disableBody(true, true);
 
     //game over text
-    let gameOverText = this.add.text(500, 200, 'Game Over\nScore: ' + coinsCollectedText, 
-        { fontSize: '55px', fill: '#ffffff', fontStyle: 'bold', fontFamily: 'Courier New', align: 'center' });
+    let gameOverText = this.add.text(250, 200, 'Penguins dont swim in lava!\nOr get caught by masterballs!\nTotal Coins: ' + coinsCollectedText, 
+        { fontSize: '25px', fill: '#ffffff', fontStyle: 'bold', fontFamily: 'Courier New', align: 'center' });
     gameOverText.setOrigin(0);
     
 
