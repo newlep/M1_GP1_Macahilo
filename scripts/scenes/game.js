@@ -1,3 +1,8 @@
+class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+  }
+}
 const config = {
   type: Phaser.AUTO,
   width: 1200,
@@ -10,6 +15,8 @@ const config = {
     }
   },
     scene: {
+        GameScene,
+
         preload: preload,
         create: create,
         update: update
@@ -333,6 +340,7 @@ function update ()
     this.physics.pause();
     gameOver.call(this, player);
   }
+  
 
   function Death(player, lava){
     this.physics.pause();
@@ -373,3 +381,4 @@ function checkWin(player, pstone){
       backgroundMusic.stop();
   }
 }
+export default GameScene;
