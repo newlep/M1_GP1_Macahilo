@@ -1,3 +1,5 @@
+import TScene from './TitleScene.js'
+
 const config = {
   type: Phaser.AUTO,
   width: 1200,
@@ -9,13 +11,14 @@ const config = {
       debug: false
     }
   },
-    scene: {
+    scenes: {
+        TScene,
         preload: preload,
         create: create,
         update: update
     }
 };
-let game = new Phaser.Game(config);
+const game = new Phaser.Game(config);
 
 // Variables
 let Background, platforms, platform, grass, lava, player,
