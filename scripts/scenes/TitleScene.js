@@ -5,17 +5,27 @@ class TitleScene extends Phaser.Scene {
   
     preload() {
       // Load title image and button assets
-      this.load.image('titleImage', 'path/to/your/title.png');
-      this.load.image('playButton', 'path/to/your/play_button.png');
+      //TITLE IMAGE IS CREDITS NLNG 
+      this.load.image('titleImage', 'assets/images/credits.png');
+      this.load.image('playButton', 'assets/images/start.png');
     }
   
     create() {
       // Add title image
-      this.add.image(this.cameras.main.centerX, this.cameras.main.centerY - 100, 'titleImage');
-  
+      const credits = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY - 100, 'titleImage');
+      credits.setScale(0.5)
+            // Make button interactive (optional: add hover effect)
+            credits.setInteractive();
+            credits.on('pointerover', () => playButton.setAlpha(0.8));
+            credits.on('pointerout', () => playButton.setAlpha(1.0));
+        
+            // Handle button click to start game.js scene
+            credits.on('pointerdown', () => {
+              this.scene.start('CreditsScene'); // Replace with actual scene name
+            });
       // Create play button
       const playButton = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY + 100, 'playButton');
-  
+      playButton.setScale(0.5)
       // Make button interactive (optional: add hover effect)
       playButton.setInteractive();
       playButton.on('pointerover', () => playButton.setAlpha(0.8));
@@ -23,10 +33,10 @@ class TitleScene extends Phaser.Scene {
   
       // Handle button click to start game.js scene
       playButton.on('pointerdown', () => {
-        this.scene.start('GameScene'); // Replace with actual scene name
+        this.scene.start('BootScene'); // Replace with actual scene name
       });
     }
   }
   
-  export default TitleScene;
+TitleScene;
   

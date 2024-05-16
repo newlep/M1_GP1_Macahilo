@@ -1,4 +1,4 @@
-export default class BootScene extends Phaser.Scene {
+class BootScene extends Phaser.Scene {
 
     constructor(){
         super('BootScene');
@@ -9,6 +9,7 @@ export default class BootScene extends Phaser.Scene {
     }
 
     create() {
-        this.scene.start("GameScene");
+        this.add.text(20,20,"Loading Game...");
+        this.scene.start("GameScene1");
     }
 }

@@ -1,7 +1,8 @@
-class GameScene extends Phaser.Scene {
+class GameScene1 extends Phaser.Scene {
   constructor() {
-    super('GameScene');
+    super('GameScene1');
   }
+
 }
 const config = {
   type: Phaser.AUTO,
@@ -15,7 +16,7 @@ const config = {
     }
   },
     scene: {
-        GameScene,
+        TitleScene,GameScene1, BootScene,
 
         preload: preload,
         create: create,
@@ -381,4 +382,3 @@ function checkWin(player, pstone){
       backgroundMusic.stop();
   }
 }
-export default GameScene;
